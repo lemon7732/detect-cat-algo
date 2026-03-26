@@ -106,6 +106,7 @@ bash scripts/autodl_one_click_train.sh \
 - 在 `--use-system-python` 模式下，如果脚本检测到 `nvidia-smi`，会自动安装 `tensorflow[and-cuda]==2.19.0`
 - 这比继续复用镜像里自带但不一定匹配的 TensorFlow 更稳
 - 脚本也会自动把 `certifi` 的 CA 证书导出给 `TFDS/requests/urllib3`，以缓解 AutoDL 环境里常见的 SSL 下载失败问题
+- 如果 AutoDL 证书链依然异常，可以额外使用 `--allow-insecure-ssl-downloads` 作为兜底
 
 ### 方式 C：只训练二分类
 
@@ -142,6 +143,14 @@ bash scripts/autodl_one_click_train.sh \
 bash scripts/autodl_one_click_train.sh \
   --use-system-python \
   --tensorflow-package "tensorflow[and-cuda]==2.19.0"
+```
+
+如果你的 TFDS 下载持续报 `CERTIFICATE_VERIFY_FAILED`，可以临时这样运行：
+
+```bash
+bash scripts/autodl_one_click_train.sh \
+  --use-system-python \
+  --allow-insecure-ssl-downloads
 ```
 
 ## 输出位置
@@ -210,3 +219,16 @@ export REQUESTS_CA_BUNDLE=$SSL_CERT_FILE
 export CURL_CA_BUNDLE=$SSL_CERT_FILE
 export GRPC_DEFAULT_SSL_ROOTS_FILE_PATH=$SSL_CERT_FILE
 ```
+
+如果环境本身证书链就是坏的，仍然失败时，可以临时使用不校验证书的下载模式：
+
+```bash
+PYTHONPATH=src python scripts/download_public_datasets.py \
+  --datasets cats_vs_dogs \
+  --allow-insecure-ssl
+```
+
+注意：
+
+- 这只建议用于公共开源数据下载
+- 不建议把这种模式用于敏感数据或账号相关请求

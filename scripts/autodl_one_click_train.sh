@@ -17,6 +17,7 @@ INSTALL_DEPS="${INSTALL_DEPS:-1}"
 USE_SYSTEM_PYTHON="${USE_SYSTEM_PYTHON:-0}"
 USE_PREINSTALLED_TENSORFLOW="${USE_PREINSTALLED_TENSORFLOW:-0}"
 TENSORFLOW_PACKAGE="${TENSORFLOW_PACKAGE:-}"
+ALLOW_INSECURE_SSL_DOWNLOADS="${ALLOW_INSECURE_SSL_DOWNLOADS:-0}"
 PIP_BIN=""
 PYTHON_IN_VENV=""
 
@@ -33,6 +34,7 @@ Options:
   --use-system-python           Use the image's built-in python/pip instead of creating a venv.
   --use-preinstalled-tensorflow Keep the image's built-in TensorFlow and skip installing tensorflow from requirements-ml.txt.
   --tensorflow-package SPEC     Override tensorflow package, e.g. tensorflow==2.19.0 or tensorflow[and-cuda]==2.19.0
+  --allow-insecure-ssl-downloads Disable SSL verification for dataset downloads. Only use this for broken certificate environments.
   --skip-install                Skip virtualenv creation and dependency installation.
   --skip-download-binary        Skip TFDS binary dataset download.
   --skip-download-cat-dataset   Skip Kaggle CAT Dataset download.
@@ -55,6 +57,7 @@ Environment variables:
   USE_SYSTEM_PYTHON
   USE_PREINSTALLED_TENSORFLOW
   TENSORFLOW_PACKAGE
+  ALLOW_INSECURE_SSL_DOWNLOADS
 EOF
 }
 
@@ -87,6 +90,10 @@ while [[ $# -gt 0 ]]; do
     --tensorflow-package)
       TENSORFLOW_PACKAGE="$2"
       shift 2
+      ;;
+    --allow-insecure-ssl-downloads)
+      ALLOW_INSECURE_SSL_DOWNLOADS=1
+      shift
       ;;
     --skip-install)
       INSTALL_DEPS=0
@@ -249,8 +256,13 @@ run_checks() {
 
 download_binary_datasets() {
   log "Downloading TFDS binary datasets"
+  local extra_args=()
+  if [[ "${ALLOW_INSECURE_SSL_DOWNLOADS}" == "1" ]]; then
+    extra_args+=(--allow-insecure-ssl)
+  fi
   PYTHONPATH=src "${PYTHON_IN_VENV}" scripts/download_public_datasets.py \
-    --datasets cats_vs_dogs oxford_iiit_pet celeb_a caltech_birds2011
+    --datasets cats_vs_dogs oxford_iiit_pet celeb_a caltech_birds2011 \
+    "${extra_args[@]}"
 }
 
 download_cat_dataset() {
@@ -260,7 +272,11 @@ download_cat_dataset() {
   fi
   chmod 600 "${HOME}/.kaggle/kaggle.json"
   log "Downloading Kaggle CAT Dataset"
-  PYTHONPATH=src "${PYTHON_IN_VENV}" scripts/download_public_datasets.py --datasets cat_dataset
+  local extra_args=()
+  if [[ "${ALLOW_INSECURE_SSL_DOWNLOADS}" == "1" ]]; then
+    extra_args+=(--allow-insecure-ssl)
+  fi
+  PYTHONPATH=src "${PYTHON_IN_VENV}" scripts/download_public_datasets.py --datasets cat_dataset "${extra_args[@]}"
 }
 
 check_downloads() {

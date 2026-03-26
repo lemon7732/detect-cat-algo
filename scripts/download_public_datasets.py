@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import sys
+import ssl
 from pathlib import Path
 
 
@@ -19,6 +20,28 @@ def _configure_ssl_env() -> None:
     os.environ.setdefault("REQUESTS_CA_BUNDLE", cert_path)
     os.environ.setdefault("CURL_CA_BUNDLE", cert_path)
     os.environ.setdefault("GRPC_DEFAULT_SSL_ROOTS_FILE_PATH", cert_path)
+
+
+def _configure_insecure_ssl() -> None:
+    ssl._create_default_https_context = ssl._create_unverified_context
+    os.environ["PYTHONHTTPSVERIFY"] = "0"
+    os.environ["CURL_CA_BUNDLE"] = ""
+    os.environ["REQUESTS_CA_BUNDLE"] = ""
+    os.environ["SSL_CERT_FILE"] = ""
+    try:
+        import requests
+        import urllib3
+
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        original_request = requests.sessions.Session.request
+
+        def _request_no_verify(self, method, url, **kwargs):
+            kwargs.setdefault("verify", False)
+            return original_request(self, method, url, **kwargs)
+
+        requests.sessions.Session.request = _request_no_verify
+    except Exception:
+        pass
 
 
 def _download_tfds_dataset(name: str, data_dir: str | None) -> dict[str, str]:
@@ -82,7 +105,15 @@ def main() -> None:
     parser.add_argument("--tfds-dir", default="data/tfds")
     parser.add_argument("--cat-dataset-dir", default="data/cat_dataset")
     parser.add_argument("--wildlife-dir", default="data/wildlife")
+    parser.add_argument(
+        "--allow-insecure-ssl",
+        action="store_true",
+        help="Disable SSL verification for dataset downloads. Only use this in broken certificate environments.",
+    )
     args = parser.parse_args()
+
+    if args.allow_insecure_ssl:
+        _configure_insecure_ssl()
 
     results = []
     for dataset_name in args.datasets:
