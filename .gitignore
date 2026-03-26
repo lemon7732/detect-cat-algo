@@ -1,0 +1,12 @@
+.venv/
+.venv312/
+.pytest_cache/
+__pycache__/
+*.pyc
+
+data/
+artifacts/
+
+.DS_Store
+
+基于猫脸智能识别的校园流浪猫救助管理系统的设计与实现-最终文件.docx

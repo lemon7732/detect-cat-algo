@@ -1,0 +1,18 @@
+project_name: campus-stray-cat-ai
+seed: 42
+device: auto
+paths:
+  root_dir: .
+  data_dir: data
+  artifacts_dir: artifacts
+  log_dir: artifacts/logs
+  binary_dir: data/binary
+  landmarks_dir: data/landmarks
+  gallery_dir: data/gallery
+  binary_artifacts: artifacts/binary
+  landmarks_artifacts: artifacts/landmarks
+  gallery_artifacts: artifacts/gallery
+  visualization_dir: artifacts/visualizations
+logging:
+  level: INFO
+  format: "%(asctime)s | %(levelname)s | %(name)s | %(message)s"

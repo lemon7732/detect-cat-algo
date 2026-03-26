@@ -1,0 +1,62 @@
+global_config: configs/global.yaml
+task: binary_classification
+model:
+  name: f_resnet_se
+  input_size: [224, 224]
+  freeze_backbone: false
+  dropout: 0.3
+data:
+  source: mixed
+  processed_dir: data/binary/public_mixed_processed
+  tfds_data_dir: data/tfds
+  max_edge: 300
+  image_extensions: [".jpg", ".jpeg", ".png"]
+  sources:
+    - source: tfds_cats_vs_dogs
+      tfds_splits: ["train"]
+      positive_label_names: ["cat"]
+      negative_label_names: ["dog"]
+      filename_prefix: cats_vs_dogs
+      max_samples_per_label: 10000
+    - source: tfds_oxford_iiit_pet
+      tfds_splits: ["train"]
+      positive_label_names: ["cat"]
+      negative_label_names: ["dog"]
+      use_head_bbox: true
+      filename_prefix: oxford_pet
+      max_samples_per_label: 3000
+    - source: tfds
+      tfds_name: celeb_a
+      tfds_splits: ["train"]
+      fixed_binary_label: 0
+      filename_prefix: celeb_a
+      max_samples: 5000
+    - source: tfds
+      tfds_name: caltech_birds2011
+      tfds_splits: ["train"]
+      fixed_binary_label: 0
+      filename_prefix: caltech_birds2011
+      max_samples: 5000
+training:
+  batch_size: 32
+  epochs: 10
+  learning_rate: 0.0003
+  val_ratio: 0.2
+  random_seed: 42
+  early_stopping_patience: 4
+  reduce_lr_patience: 2
+  num_parallel_calls: 4
+  prefetch_buffer: 2
+augmentation:
+  horizontal_flip: true
+  rotation_factor: 0.05
+  zoom_factor: 0.1
+  brightness_delta: 0.1
+artifacts:
+  output_dir: artifacts/binary_thesis_public
+  best_weights: artifacts/binary_thesis_public/best.weights.h5
+  final_weights: artifacts/binary_thesis_public/final.weights.h5
+  history_csv: artifacts/binary_thesis_public/history.csv
+  history_plot: artifacts/binary_thesis_public/history.png
+  eval_json: artifacts/binary_thesis_public/eval.json
+  predictions_csv: artifacts/binary_thesis_public/test_predictions.csv

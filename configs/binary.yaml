@@ -1,0 +1,37 @@
+global_config: configs/global.yaml
+task: binary_classification
+model:
+  name: f_resnet_se
+  input_size: [224, 224]
+  freeze_backbone: false
+  dropout: 0.3
+data:
+  source: directory
+  raw_dir: data/binary/raw
+  processed_dir: data/binary/processed
+  max_edge: 300
+  train_ratio: 0.8
+  image_extensions: [".jpg", ".jpeg", ".png"]
+training:
+  batch_size: 32
+  epochs: 10
+  learning_rate: 0.0003
+  val_ratio: 0.2
+  random_seed: 42
+  early_stopping_patience: 4
+  reduce_lr_patience: 2
+  num_parallel_calls: 4
+  prefetch_buffer: 2
+augmentation:
+  horizontal_flip: true
+  rotation_factor: 0.05
+  zoom_factor: 0.1
+  brightness_delta: 0.1
+artifacts:
+  output_dir: artifacts/binary
+  best_weights: artifacts/binary/best.weights.h5
+  final_weights: artifacts/binary/final.weights.h5
+  history_csv: artifacts/binary/history.csv
+  history_plot: artifacts/binary/history.png
+  eval_json: artifacts/binary/eval.json
+  predictions_csv: artifacts/binary/test_predictions.csv

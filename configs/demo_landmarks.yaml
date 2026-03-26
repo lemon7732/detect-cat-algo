@@ -1,0 +1,35 @@
+global_config: configs/global.yaml
+task: demo_landmarks
+model:
+  name: vgg_regressor
+  input_size: [64, 64]
+  dense_units: [128, 64]
+  dropout: 0.2
+data:
+  image_dir: data/demo/landmarks/images
+  csv_path: data/demo/landmarks/train.csv
+  processed_dir: data/demo/landmarks/processed
+  train_ratio: 0.8
+  image_extensions: [".png"]
+training:
+  batch_size: 4
+  epochs: 3
+  learning_rate: 0.001
+  val_ratio: 0.2
+  random_seed: 42
+  early_stopping_patience: 2
+  reduce_lr_patience: 1
+  num_parallel_calls: 1
+  prefetch_buffer: 1
+augmentation:
+  horizontal_flip: true
+  brightness_delta: 0.02
+artifacts:
+  output_dir: artifacts/demo/landmarks
+  best_weights: artifacts/demo/landmarks/best.weights.h5
+  final_weights: artifacts/demo/landmarks/final.weights.h5
+  history_csv: artifacts/demo/landmarks/history.csv
+  history_plot: artifacts/demo/landmarks/history.png
+  eval_json: artifacts/demo/landmarks/eval.json
+  predictions_csv: artifacts/demo/landmarks/val_predictions.csv
+  preview_dir: artifacts/demo/landmarks/previews

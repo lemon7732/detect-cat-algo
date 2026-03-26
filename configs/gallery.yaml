@@ -1,0 +1,17 @@
+global_config: configs/global.yaml
+task: gallery
+metadata_csv: data/gallery/metadata.csv
+gallery_root: data/gallery
+output:
+  json_path: artifacts/gallery/gallery_index.json
+  npz_path: artifacts/gallery/gallery_vectors.npz
+  failures_json: artifacts/gallery/gallery_failures.json
+matching:
+  mode: image
+  top_k: 5
+  cosine_threshold: 0.85
+  euclidean_threshold: 0.25
+pipeline:
+  binary_config: configs/binary.yaml
+  landmarks_config: configs/landmarks.yaml
+  cascade_path: assets/cascades/haarcascade_frontalcatface.xml

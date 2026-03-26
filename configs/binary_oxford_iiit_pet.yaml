@@ -1,0 +1,43 @@
+global_config: configs/global.yaml
+task: binary_classification
+model:
+  name: f_resnet_se
+  input_size: [224, 224]
+  freeze_backbone: false
+  dropout: 0.3
+data:
+  source: tfds_oxford_iiit_pet
+  tfds_name: oxford_iiit_pet
+  tfds_splits: ["train", "test"]
+  tfds_data_dir: data/tfds
+  label_key: species
+  processed_dir: data/binary/oxford_iiit_pet_processed
+  max_edge: 300
+  use_head_bbox: true
+  max_samples: 0
+  max_samples_per_label: 0
+  positive_label_names: ["cat"]
+  negative_label_names: ["dog"]
+training:
+  batch_size: 32
+  epochs: 10
+  learning_rate: 0.0003
+  val_ratio: 0.2
+  random_seed: 42
+  early_stopping_patience: 4
+  reduce_lr_patience: 2
+  num_parallel_calls: 4
+  prefetch_buffer: 2
+augmentation:
+  horizontal_flip: true
+  rotation_factor: 0.05
+  zoom_factor: 0.1
+  brightness_delta: 0.1
+artifacts:
+  output_dir: artifacts/binary_oxford_iiit_pet
+  best_weights: artifacts/binary_oxford_iiit_pet/best.weights.h5
+  final_weights: artifacts/binary_oxford_iiit_pet/final.weights.h5
+  history_csv: artifacts/binary_oxford_iiit_pet/history.csv
+  history_plot: artifacts/binary_oxford_iiit_pet/history.png
+  eval_json: artifacts/binary_oxford_iiit_pet/eval.json
+  predictions_csv: artifacts/binary_oxford_iiit_pet/test_predictions.csv

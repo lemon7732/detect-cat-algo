@@ -1,0 +1,17 @@
+global_config: configs/global.yaml
+task: demo_gallery
+metadata_csv: data/demo/gallery/metadata.csv
+gallery_root: data/demo/gallery
+output:
+  json_path: artifacts/demo/gallery/gallery_index.json
+  npz_path: artifacts/demo/gallery/gallery_vectors.npz
+  failures_json: artifacts/demo/gallery/gallery_failures.json
+matching:
+  top_k: 3
+  cosine_threshold: 0.80
+  euclidean_threshold: 0.35
+pipeline:
+  binary_config: configs/demo_binary.yaml
+  landmarks_config: configs/demo_landmarks.yaml
+  cascade_path: assets/cascades/haarcascade_frontalcatface.xml
+  allow_full_image_fallback: true

@@ -1,0 +1,45 @@
+global_config: configs/global.yaml
+task: landmarks
+model:
+  name: vgg_regressor
+  input_size: [224, 224]
+  dense_units: [512, 128]
+  dropout: 0.3
+data:
+  source: catflw
+  image_dir: data/catflw/CatFLW dataset/images
+  labels_dir: data/catflw/CatFLW dataset/labels
+  processed_dir: data/landmarks/catflw_processed
+  image_extensions: [".jpg", ".jpeg", ".png"]
+  point_groups:
+    - [0]
+    - [1]
+    - [2]
+    - [3]
+    - [4]
+    - [5]
+    - [6]
+    - [7]
+    - [8]
+training:
+  batch_size: 16
+  epochs: 30
+  learning_rate: 0.0005
+  val_ratio: 0.2
+  random_seed: 42
+  early_stopping_patience: 6
+  reduce_lr_patience: 3
+  num_parallel_calls: 4
+  prefetch_buffer: 2
+augmentation:
+  horizontal_flip: true
+  brightness_delta: 0.08
+artifacts:
+  output_dir: artifacts/landmarks_catflw
+  best_weights: artifacts/landmarks_catflw/best.weights.h5
+  final_weights: artifacts/landmarks_catflw/final.weights.h5
+  history_csv: artifacts/landmarks_catflw/history.csv
+  history_plot: artifacts/landmarks_catflw/history.png
+  eval_json: artifacts/landmarks_catflw/eval.json
+  predictions_csv: artifacts/landmarks_catflw/val_predictions.csv
+  preview_dir: artifacts/landmarks_catflw/previews

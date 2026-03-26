@@ -1,0 +1,9 @@
+# Full model training support currently requires a TensorFlow-compatible Python.
+# Recommended interpreter: Python 3.10-3.12.
+tensorflow==2.19.0; python_version < "3.13"
+tensorflow-datasets>=4.9,<5
+matplotlib==3.10.8
+pandas==3.0.1
+scikit-learn==1.8.0
+kaggle>=1.7,<2
+wildlife-datasets>=1.0,<2

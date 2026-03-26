@@ -1,0 +1,15 @@
+global_config: configs/global.yaml
+task: demo_api
+host: 0.0.0.0
+port: 8001
+reload: false
+pipeline:
+  binary_config: configs/demo_binary.yaml
+  landmarks_config: configs/demo_landmarks.yaml
+  gallery_config: configs/demo_gallery.yaml
+  cascade_path: assets/cascades/haarcascade_frontalcatface.xml
+  allow_full_image_fallback: true
+matching:
+  top_k: 3
+  cosine_threshold: 0.80
+  euclidean_threshold: 0.35

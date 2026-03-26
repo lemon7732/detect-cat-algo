@@ -1,0 +1,36 @@
+global_config: configs/global.yaml
+task: demo_binary_classification
+model:
+  name: mini_cnn
+  input_size: [64, 64]
+  freeze_backbone: false
+  dropout: 0.2
+data:
+  raw_dir: data/demo/binary/raw
+  processed_dir: data/demo/binary/processed
+  max_edge: 96
+  train_ratio: 0.8
+  image_extensions: [".png"]
+training:
+  batch_size: 4
+  epochs: 2
+  learning_rate: 0.001
+  val_ratio: 0.2
+  random_seed: 42
+  early_stopping_patience: 2
+  reduce_lr_patience: 1
+  num_parallel_calls: 1
+  prefetch_buffer: 1
+augmentation:
+  horizontal_flip: true
+  rotation_factor: 0.02
+  zoom_factor: 0.05
+  brightness_delta: 0.02
+artifacts:
+  output_dir: artifacts/demo/binary
+  best_weights: artifacts/demo/binary/best.weights.h5
+  final_weights: artifacts/demo/binary/final.weights.h5
+  history_csv: artifacts/demo/binary/history.csv
+  history_plot: artifacts/demo/binary/history.png
+  eval_json: artifacts/demo/binary/eval.json
+  predictions_csv: artifacts/demo/binary/test_predictions.csv
