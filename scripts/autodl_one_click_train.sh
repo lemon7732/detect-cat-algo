@@ -128,6 +128,23 @@ ensure_command() {
   fi
 }
 
+require_supported_python() {
+  local version_output
+  version_output="$("${PYTHON_BIN}" - <<'PY'
+import sys
+print(f"{sys.version_info.major}.{sys.version_info.minor}")
+PY
+)"
+  local major="${version_output%%.*}"
+  local minor="${version_output##*.}"
+  if (( major < 3 )) || (( major == 3 && minor < 10 )) || (( major == 3 && minor > 12 )) || (( major > 3 )); then
+    echo "Current Python is ${version_output}. Full training in this project currently requires Python 3.10-3.12." >&2
+    echo "Python 3.8 is too old for the current codebase, and Python 3.13+ is outside the validated TensorFlow/dependency range." >&2
+    echo "Please create and activate a conda environment such as: conda create -n catalgo310 python=3.10 -y" >&2
+    exit 1
+  fi
+}
+
 install_python_requirements() {
   "${PIP_BIN}" install -r requirements.txt
   if [[ "${USE_PREINSTALLED_TENSORFLOW}" == "1" ]]; then
@@ -143,6 +160,7 @@ install_python_requirements() {
 
 setup_venv() {
   ensure_command "${PYTHON_BIN}"
+  require_supported_python
   if [[ ! -d "${VENV_DIR}" ]]; then
     log "Creating virtual environment at ${VENV_DIR}"
     "${PYTHON_BIN}" -m venv "${VENV_DIR}"
@@ -168,6 +186,7 @@ activate_existing_venv() {
 
 setup_system_python() {
   ensure_command "${PYTHON_BIN}"
+  require_supported_python
   PYTHON_IN_VENV="${PYTHON_BIN}"
   if command -v pip3 >/dev/null 2>&1; then
     PIP_BIN="pip3"
