@@ -8,7 +8,21 @@ import sys
 from pathlib import Path
 
 
+def _configure_ssl_env() -> None:
+    try:
+        import certifi
+
+        cert_path = certifi.where()
+    except Exception:
+        return
+    os.environ.setdefault("SSL_CERT_FILE", cert_path)
+    os.environ.setdefault("REQUESTS_CA_BUNDLE", cert_path)
+    os.environ.setdefault("CURL_CA_BUNDLE", cert_path)
+    os.environ.setdefault("GRPC_DEFAULT_SSL_ROOTS_FILE_PATH", cert_path)
+
+
 def _download_tfds_dataset(name: str, data_dir: str | None) -> dict[str, str]:
+    _configure_ssl_env()
     import tensorflow_datasets as tfds
 
     builder = tfds.builder(name, data_dir=data_dir)
@@ -35,6 +49,7 @@ def _download_cat_individual_images(root: str | Path) -> dict[str, str]:
 
 
 def _download_kaggle_dataset(ref: str, destination: str | Path, unzip: bool = True) -> dict[str, str]:
+    _configure_ssl_env()
     target_dir = Path(destination)
     target_dir.mkdir(parents=True, exist_ok=True)
     command = ["kaggle", "datasets", "download", "-d", ref, "-p", str(target_dir)]

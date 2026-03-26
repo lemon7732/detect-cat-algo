@@ -16,6 +16,7 @@ RUN_CHECKS="${RUN_CHECKS:-1}"
 INSTALL_DEPS="${INSTALL_DEPS:-1}"
 USE_SYSTEM_PYTHON="${USE_SYSTEM_PYTHON:-0}"
 USE_PREINSTALLED_TENSORFLOW="${USE_PREINSTALLED_TENSORFLOW:-0}"
+TENSORFLOW_PACKAGE="${TENSORFLOW_PACKAGE:-}"
 PIP_BIN=""
 PYTHON_IN_VENV=""
 
@@ -31,6 +32,7 @@ Options:
   --landmarks-config PATH       Landmark training config. Default: configs/landmarks_cat_dataset.yaml
   --use-system-python           Use the image's built-in python/pip instead of creating a venv.
   --use-preinstalled-tensorflow Keep the image's built-in TensorFlow and skip installing tensorflow from requirements-ml.txt.
+  --tensorflow-package SPEC     Override tensorflow package, e.g. tensorflow==2.19.0 or tensorflow[and-cuda]==2.19.0
   --skip-install                Skip virtualenv creation and dependency installation.
   --skip-download-binary        Skip TFDS binary dataset download.
   --skip-download-cat-dataset   Skip Kaggle CAT Dataset download.
@@ -52,6 +54,7 @@ Environment variables:
   INSTALL_DEPS
   USE_SYSTEM_PYTHON
   USE_PREINSTALLED_TENSORFLOW
+  TENSORFLOW_PACKAGE
 EOF
 }
 
@@ -80,6 +83,10 @@ while [[ $# -gt 0 ]]; do
     --use-preinstalled-tensorflow)
       USE_PREINSTALLED_TENSORFLOW=1
       shift
+      ;;
+    --tensorflow-package)
+      TENSORFLOW_PACKAGE="$2"
+      shift 2
       ;;
     --skip-install)
       INSTALL_DEPS=0
@@ -145,17 +152,48 @@ PY
   fi
 }
 
+configure_ssl_env() {
+  local cert_path=""
+  cert_path="$("${PYTHON_IN_VENV}" - <<'PY' 2>/dev/null || true
+try:
+    import certifi
+    print(certifi.where())
+except Exception:
+    pass
+PY
+)"
+  if [[ -n "${cert_path}" && -f "${cert_path}" ]]; then
+    export SSL_CERT_FILE="${cert_path}"
+    export REQUESTS_CA_BUNDLE="${cert_path}"
+    export CURL_CA_BUNDLE="${cert_path}"
+    export GRPC_DEFAULT_SSL_ROOTS_FILE_PATH="${cert_path}"
+    log "Using certifi CA bundle: ${cert_path}"
+  fi
+}
+
 install_python_requirements() {
   "${PIP_BIN}" install -r requirements.txt
+  local filtered
+  filtered="$(mktemp)"
+  grep -v '^tensorflow==' requirements-ml.txt > "${filtered}"
+  "${PIP_BIN}" install -r "${filtered}"
+  rm -f "${filtered}"
+
   if [[ "${USE_PREINSTALLED_TENSORFLOW}" == "1" ]]; then
-    local filtered
-    filtered="$(mktemp)"
-    grep -v '^tensorflow==' requirements-ml.txt > "${filtered}"
-    "${PIP_BIN}" install -r "${filtered}"
-    rm -f "${filtered}"
-  else
-    "${PIP_BIN}" install -r requirements-ml.txt
+    log "Keeping preinstalled TensorFlow from current image"
+    return
   fi
+
+  local tf_package="${TENSORFLOW_PACKAGE}"
+  if [[ -z "${tf_package}" ]]; then
+    if [[ "${USE_SYSTEM_PYTHON}" == "1" ]] && command -v nvidia-smi >/dev/null 2>&1; then
+      tf_package='tensorflow[and-cuda]==2.19.0'
+    else
+      tf_package='tensorflow==2.19.0'
+    fi
+  fi
+  log "Installing TensorFlow package: ${tf_package}"
+  "${PIP_BIN}" install "${tf_package}"
 }
 
 setup_venv() {
@@ -249,6 +287,8 @@ main() {
   else
     activate_existing_venv
   fi
+
+  configure_ssl_env
 
   if [[ "${RUN_CHECKS}" == "1" ]]; then
     run_checks

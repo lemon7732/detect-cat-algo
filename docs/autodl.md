@@ -77,7 +77,9 @@ chmod 700 ~/.kaggle
 cd /root/autodl-tmp
 git clone <你的仓库地址> algo
 cd algo
-bash scripts/autodl_one_click_train.sh --use-system-python --use-preinstalled-tensorflow
+conda create -n catalgo310 python=3.10 -y
+conda activate catalgo310
+bash scripts/autodl_one_click_train.sh --use-system-python
 ```
 
 ### 方式 B：只训练，不重复装环境
@@ -89,16 +91,21 @@ cd /root/autodl-tmp/algo
 bash scripts/autodl_one_click_train.sh --skip-install --skip-download-binary --skip-download-cat-dataset
 ```
 
-如果你用的是 AutoDL 自带 TensorFlow 镜像而不是项目自己的虚拟环境，更适合这样跑：
+如果你用的是 AutoDL 镜像里的 conda 环境而不是项目自己的虚拟环境，更适合这样跑：
 
 ```bash
 cd /root/autodl-tmp/algo
 bash scripts/autodl_one_click_train.sh \
   --use-system-python \
-  --use-preinstalled-tensorflow \
   --skip-download-binary \
   --skip-download-cat-dataset
 ```
+
+说明：
+
+- 在 `--use-system-python` 模式下，如果脚本检测到 `nvidia-smi`，会自动安装 `tensorflow[and-cuda]==2.19.0`
+- 这比继续复用镜像里自带但不一定匹配的 TensorFlow 更稳
+- 脚本也会自动把 `certifi` 的 CA 证书导出给 `TFDS/requests/urllib3`，以缓解 AutoDL 环境里常见的 SSL 下载失败问题
 
 ### 方式 C：只训练二分类
 
@@ -127,6 +134,14 @@ bash scripts/autodl_one_click_train.sh --skip-install --skip-download-binary --s
 bash scripts/autodl_one_click_train.sh \
   --binary-config configs/binary_cats_vs_dogs.yaml \
   --landmarks-config configs/landmarks_cat_dataset.yaml
+```
+
+如果你要手动指定 TensorFlow 安装包：
+
+```bash
+bash scripts/autodl_one_click_train.sh \
+  --use-system-python \
+  --tensorflow-package "tensorflow[and-cuda]==2.19.0"
 ```
 
 ## 输出位置
@@ -166,8 +181,8 @@ bash scripts/autodl_one_click_train.sh --skip-download-cat-dataset --skip-landma
 ### 只想检查环境
 
 ```bash
-PYTHONPATH=src .venv-autodl/bin/python scripts/check_env.py
-PYTHONPATH=src .venv-autodl/bin/python scripts/check_downloads.py
+PYTHONPATH=src python scripts/check_env.py
+PYTHONPATH=src python scripts/check_downloads.py
 ```
 
 ### 训练日志
@@ -176,4 +191,22 @@ PYTHONPATH=src .venv-autodl/bin/python scripts/check_downloads.py
 
 ```bash
 bash scripts/autodl_one_click_train.sh 2>&1 | tee artifacts/autodl/train.log
+```
+
+### TFDS 下载报 `CERTIFICATE_VERIFY_FAILED`
+
+脚本现在会自动设置：
+
+- `SSL_CERT_FILE`
+- `REQUESTS_CA_BUNDLE`
+- `CURL_CA_BUNDLE`
+- `GRPC_DEFAULT_SSL_ROOTS_FILE_PATH`
+
+如果你要手动执行，也可以先运行：
+
+```bash
+export SSL_CERT_FILE=$(python -c "import certifi; print(certifi.where())")
+export REQUESTS_CA_BUNDLE=$SSL_CERT_FILE
+export CURL_CA_BUNDLE=$SSL_CERT_FILE
+export GRPC_DEFAULT_SSL_ROOTS_FILE_PATH=$SSL_CERT_FILE
 ```
