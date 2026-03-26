@@ -5,6 +5,7 @@ tensorflow-datasets>=4.9,<5
 matplotlib==3.10.8
 pandas==2.2.3; python_version < "3.11"
 pandas==3.0.1; python_version >= "3.11"
-scikit-learn==1.8.0
+scikit-learn==1.7.2; python_version < "3.11"
+scikit-learn==1.8.0; python_version >= "3.11"
 kaggle>=1.7,<2
 wildlife-datasets>=1.0,<2
